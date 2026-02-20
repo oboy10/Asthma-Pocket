@@ -1,93 +1,81 @@
 # AsthmaPocket
 
-A minimalistic asthma tracking app: daily breathing logs, environment (AQI/pollen), personalized plan, and insights. Built with Next.js, TypeScript, Tailwind CSS, and Supabase.
+**Try it:** [asthma-pocket.vercel.app](https://asthma-pocket.vercel.app/)
 
-## Features
+---
 
-- **Today**: Environment card (AQI, pollen, weather), asthma zones, daily plan tips, symptom logging, rescue/controller tracking
-- **History**: 7-day strip and full log list
-- **Insights**: Week summary, top trigger, streak
-- **Settings**: Account, sign out
-- **Auth**: Sign in / sign up (email + password or magic link). Logs are stored per user.
+## Why I built this
 
-## Setup
+I had asthma as a kid. I remember the uncertainty—not always knowing what made a bad day worse, or what “doing well” really looked like over time. I wanted something simple: a place to log how my breathing felt each day and to see how that lined up with the air around me and my habits.
 
-1. **Clone and install**
+AsthmaPocket is that app. It’s a small, private tool to track your breathing day by day, see your local air quality and pollen, get a simple “plan for today,” and look back at your history and patterns. No clutter—just what helps you stay aware and in control.
 
-   ```bash
-   npm install
-   ```
+---
 
-2. **Supabase**
+## What it does
 
-   - Create a project at [supabase.com](https://supabase.com).
-   - In **SQL Editor**, create the table (if not already):
+- **Today** — Log how your breathing is (great, a bit off, bad, or really bad), plus whether you used your rescue inhaler, had a night cough, exercised, or were sick. You also see today’s air quality (AQI), pollen, and weather, and a short “plan for today” with a few practical tips.
+- **History** — A 7-day snapshot and a full list of past logs so you can spot trends.
+- **Insights** — A quick look at your last two weeks: average symptoms, rescue use, what might be triggering bad days, and a simple “good days” streak.
+- **Settings** — Your account (sign in with email; your data stays yours).
 
-   ```sql
-   create table if not exists daily_logs (
-     id uuid primary key default gen_random_uuid(),
-     user_id uuid references auth.users(id) on delete cascade not null,
-     log_date date not null,
-     symptom_score smallint not null check (symptom_score between 0 and 3),
-     rescue_used boolean not null default false,
-     rescue_puffs smallint,
-     night_cough boolean not null default false,
-     exercised boolean not null default false,
-     sick boolean not null default false,
-     controller_taken boolean,
-     aqi smallint,
-     pollen_index smallint,
-     latitude double precision,
-     longitude double precision,
-     created_at timestamptz default now()
-   );
+Everything is designed to be clear and calm: one main flow per day, with environment and plan at the top so you can make better decisions.
 
-   alter table daily_logs enable row level security;
+---
 
-   create policy "Users can manage own logs"
-     on daily_logs for all
-     using (auth.uid() = user_id)
-     with check (auth.uid() = user_id);
-   ```
+## How it’s made
 
-   - In **Authentication → URL Configuration**, add your site URL and redirect URLs (e.g. `http://localhost:3000`, `https://your-app.vercel.app`, `https://your-app.vercel.app/auth/callback`).
+AsthmaPocket is a web app built so it’s fast, works on phones and desktops, and keeps your data secure.
 
-3. **Environment variables**
+- **Front end:** [Next.js](https://nextjs.org) and [React](https://react.dev) with [Tailwind CSS](https://tailwindcss.com) for a clean, consistent layout. The app is responsive and works well on small screens.
+- **Back end & data:** [Supabase](https://supabase.com) handles sign-in and stores your logs. Only you can see your data.
+- **Environment data:** Air quality and pollen come from [Open-Meteo](https://open-meteo.com) so you can see local AQI and pollen when you allow location.
 
-   Copy `.env.example` to `.env.local` and set:
+The code is organized into: **pages** (Today, History, Insights, Settings), **API routes** (saving and loading logs, and a small “planner” that turns your recent logs into daily tips), and **shared pieces** (navigation, auth, icons). No heavy frameworks—just what’s needed to keep it simple and maintainable.
 
-   ```bash
-   cp .env.example .env.local
-   ```
+---
 
-   - `NEXT_PUBLIC_SUPABASE_URL`: Project URL (Supabase Dashboard → Settings → API)
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: anon/public key
+## Making it better
 
-4. **Run**
+I’m actively improving AsthmaPocket. Right now the focus is on:
 
-   ```bash
-   npm run dev
-   ```
+- **Stability and polish** — Fixing bugs and smoothing out the experience on different devices and browsers.
+- **Smarter tips** — Better “plan for today” suggestions based on your history and local conditions.
+- **Reminders and preferences** — Optional daily reminders and settings so the app fits how you actually use it.
 
-   Open [http://localhost:3000](http://localhost:3000).
+If you have ideas or run into issues, open an [Issue](https://github.com/oboy10/Asthma-Pocket/issues) on GitHub. I read them and use feedback to decide what to build next.
 
-## Deploy on Vercel
+---
 
-**Step-by-step:** See **[DEPLOY.md](./DEPLOY.md)** for a full walkthrough (GitHub → Vercel + Supabase redirect URLs).
+## For developers
 
-Summary:
-1. Push the repo to GitHub and import the project in [Vercel](https://vercel.com).
-2. In the Vercel project, go to **Settings → Environment Variables** and add:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-3. In **Supabase Dashboard → Authentication → URL Configuration**:
-   - **Site URL**: `https://your-vercel-domain.vercel.app`
-   - **Redirect URLs**: add `https://your-vercel-domain.vercel.app/auth/callback`
-4. Deploy. After the first deploy, confirm the production URL and add it (and its `/auth/callback`) to Supabase redirect URLs if different.
+### Run it locally
 
-## Scripts
+```bash
+git clone https://github.com/oboy10/Asthma-Pocket.git
+cd Asthma-Pocket
+npm install
+```
 
-- `npm run dev` — start dev server (webpack)
-- `npm run build` — production build
-- `npm run start` — start production server
-- `npm run lint` — run ESLint
+Copy `.env.example` to `.env.local` and add your [Supabase](https://supabase.com) project URL and anon key. Create the `daily_logs` table and enable auth (see [DEPLOY.md](./DEPLOY.md) for SQL and URL config).
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### Deploy
+
+Step-by-step: **[DEPLOY.md](./DEPLOY.md)** (GitHub → Vercel, env vars, Supabase redirect URLs).
+
+### Scripts
+
+- `npm run dev` — dev server  
+- `npm run build` — production build  
+- `npm run start` — run production build locally  
+- `npm run lint` — ESLint  
+
+---
+
+**[Open AsthmaPocket →](https://asthma-pocket.vercel.app/)**
